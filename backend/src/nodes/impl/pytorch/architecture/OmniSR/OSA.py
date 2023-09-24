@@ -573,5 +573,4 @@ class OSA_Block(nn.Module):
         )
 
     def forward(self, x):
-        out = self.layer(x)
-        return out
+        return self.layer(x)
