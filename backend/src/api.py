@@ -147,9 +147,7 @@ class NodeGroup:
         def to_list(x: List[S] | S | None) -> List[S]:
             if x is None:
                 return []
-            if isinstance(x, list):
-                return x
-            return [x]
+            return x if isinstance(x, list) else [x]
 
         see_also = to_list(see_also)
         features = to_list(features)
@@ -487,7 +485,7 @@ class PackageRegistry:
                     except Exception as e:
                         load_error.append(LoadErrorInfo(module, file_path, e))
 
-        if len(failed_checks) > 0:
+        if failed_checks:
             raise RuntimeError(f"Checks failed in {len(failed_checks)} node(s)")
 
         self._refresh_nodes()
@@ -503,9 +501,6 @@ class PackageRegistry:
             for category in package.categories:
                 for sub in category.node_groups:
                     for node in sub.nodes:
-                        if node.schema_id in self.nodes:
-                            # print warning
-                            pass
                         self.nodes[node.schema_id] = node, sub
 
 

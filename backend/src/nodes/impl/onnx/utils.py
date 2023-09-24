@@ -10,9 +10,7 @@ OnnxInputShape = Literal["BCHW", "BHWC"]
 
 
 def as_int(value) -> int | None:
-    if isinstance(value, int):
-        return value
-    return None
+    return value if isinstance(value, int) else None
 
 
 def parse_onnx_shape(

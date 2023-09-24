@@ -56,7 +56,7 @@ class AppContext:
     def __init__(self):
         self.config: ServerConfig = None  # type: ignore
         self.executor: Optional[Executor] = None
-        self.cache: Dict[NodeId, Output] = dict()
+        self.cache: Dict[NodeId, Output] = {}
         # This will be initialized by after_server_start.
         # This is necessary because we don't know Sanic's event loop yet.
         self.queue: EventQueue = None  # type: ignore
@@ -361,9 +361,10 @@ async def list_ncnn_gpus(_request: Request):
         # pylint: disable=import-outside-toplevel
         from ncnn_vulkan import ncnn
 
-        result = []
-        for i in range(ncnn.get_gpu_count()):
-            result.append(ncnn.get_gpu_info(i).device_name())
+        result = [
+            ncnn.get_gpu_info(i).device_name()
+            for i in range(ncnn.get_gpu_count())
+        ]
         return json(result)
     except Exception as exception:
         try:
@@ -410,11 +411,9 @@ class SystemStat:
 
 @app.route("/system-usage", methods=["GET"])
 async def system_usage(_request: Request):
-    stats_list = []
     cpu_usage = psutil.cpu_percent()
     mem_usage = psutil.virtual_memory().percent
-    stats_list.append(SystemStat("CPU", cpu_usage))
-    stats_list.append(SystemStat("RAM", mem_usage))
+    stats_list = [SystemStat("CPU", cpu_usage), SystemStat("RAM", mem_usage)]
     nv = get_nvidia_helper()
     if nv is not None:
         for i in range(nv.num_gpus):
@@ -588,7 +587,7 @@ async def import_packages(
             if dep.auto_update and is_installed:
                 to_install.append(dep)
 
-    if len(to_install) > 0:
+    if to_install:
         try:
             await install_deps(to_install)
         except Exception as ex:
@@ -616,7 +615,7 @@ async def import_packages(
             else:
                 import_errors.append(e)
 
-        if len(import_errors) > 0:
+        if import_errors:
             logger.warning(f"Failed to import {len(import_errors)} modules:")
             for e in import_errors:
                 logger.warning(f"{e.error}  ->  {e.module}")

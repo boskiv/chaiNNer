@@ -33,16 +33,12 @@ def pin(dependency: DependencyInfo) -> str:
         if os.path.isfile(whl_file):
             return whl_file
 
-    if version is None:
-        return package_name
-
-    return f"{package_name}=={version}"
+    return package_name if version is None else f"{package_name}=={version}"
 
 
 def coerce_semver(version: str) -> Tuple[int, int, int]:
     regex = r"(\d+)(?:\.(\d+)(?:\.(\d+))?)?"
-    match = re.search(regex, version)
-    if match:
+    if match := re.search(regex, version):
         return (
             int(match.group(1) or 0),
             int(match.group(2) or 0),
@@ -167,16 +163,12 @@ async def install_dependencies(
                 await update_progress_cb(
                     f"Collecting {installing_name}...", get_progress_amount(), None
                 )
-        # The Downloading step of pip. It tells us what package is currently being downloaded.
-        # Later, we can use this to get the progress of the download.
-        # For now, we just tell the user that it's happening.
         elif "Downloading" in line:
             await update_progress_cb(
                 f"Downloading {installing_name}...",
                 get_progress_amount() + dep_small_incr,
                 None,
             )
-        # We can parse this line to get the progress of the download, but only in our pip fork for now
         elif "Progress:" in line:
             json_line = line.replace("Progress:", "").strip()
             try:
@@ -193,16 +185,14 @@ async def install_dependencies(
                 if logger is not None:
                     logger.error(str(e))
                 # pass
-        # The Installing step of pip. Installs happen for all the collected packages at once.
-        # We can't get the progress of the installation, so we just tell the user that it's happening.
         elif "Installing collected packages" in line:
-            await update_progress_cb(f"Installing collected dependencies...", 0.9, None)
+            await update_progress_cb("Installing collected dependencies...", 0.9, None)
 
     exit_code = process.wait()
     if exit_code != 0:
         raise ValueError("An error occurred while installing dependencies.")
 
-    await update_progress_cb(f"Finished installing dependencies...", 1, None)
+    await update_progress_cb("Finished installing dependencies...", 1, None)
 
     for dep_info in dependencies_to_install:
         installing_name = dep_info["package_name"]
